@@ -1,4 +1,5 @@
 clean-hs:
-	rm *.hi *.o
+	cabal clean
+	rm *.hi *.o tests/*/*.nano
 
 clean: clean-hs

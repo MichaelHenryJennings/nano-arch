@@ -14,7 +14,7 @@ getNumber :: String -> Int -> [Bool]
 getNumber text size = let number = read text in
     if number < 0 || number > 255
         then error "number out of range"
-        else integerToBools number size
+        else reverse $ integerToBools number size
 
 boolsToWord8 :: [Bool] -> Word8
 boolsToWord8 [] = 0
@@ -23,7 +23,8 @@ boolsToWord8 (bool : bools) = 2 * boolsToWord8 bools + if bool then 1 else 0
 boolsToWord8s :: [Bool] -> (Word8, Word8)
 boolsToWord8s bools = if length bools /= 16 
     then error "internal: machine code of wrong length" 
-    else (boolsToWord8 $ reverse $ take 8 bools, boolsToWord8 $ reverse $ drop 8 bools)
+    else (boolsToWord8 $ reverse $ drop 8 bools, boolsToWord8 $ reverse $ take 8 bools)
+    -- TODO configurable endianness
 
 -- TODO replace this with a declarative rules-based engine
 encode :: String -> (Word8, Word8) -- assembles a single instruction
