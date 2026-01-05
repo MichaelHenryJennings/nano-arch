@@ -1,4 +1,4 @@
-jmp r0 r1 +1
+jmp r0 r1
 ld r2 r3
 st r4 r5
 mov @0 $42 r6

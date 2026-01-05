@@ -2,7 +2,7 @@ use std::env;
 use std::fs;
 use std::io::Error;
 
-fn slice(value : u16, low : u8, bits : u8) -> u16 {
+fn slice(value : u32, low : u8, bits : u8) -> u32 {
     (value >> low) & ((1 << bits) - 1)
 }
 
@@ -31,8 +31,7 @@ fn main() -> Result<(), Error> {
 
     // initialize processor state
     let mut pc : u32 = 0;
-    let mut alignment : bool = false;
-    let mut reg : Vec<u32> = vec![0; 8];
+    let mut reg : Vec<u32> = vec![0; 32];
 
     // initialize memory from image file
     let image : Vec<u8> = fs::read(&args[1])?;
@@ -46,54 +45,50 @@ fn main() -> Result<(), Error> {
 
     // fetch-decode-execute loop
     loop {
-        let instruction : u16 = (load(&mem, pc) >> (if alignment {16} else {0})) as u16;
-        if slice(instruction, 6, 10) == 0b0000000000 { // halt
-            println!("Emulation complete, printing results:");
+        let instruction : u32 = load(&mem, pc);
+        if slice(instruction, 10, 22) == 0b0000000000000000000000 { // halt
             let mut j : u32 = 0;
-            let p : usize = slice(instruction, 3, 3) as usize;
-            let l : usize = slice(instruction, 0, 3) as usize;
+            let p : usize = slice(instruction, 5, 5) as usize;
+            let l : usize = slice(instruction, 0, 5) as usize;
+            println!("{}", if reg[l] == 0 {"Emulation complete, printing results:"} else {"No results to print."});
             while j < reg[l] {
                 println!("{}", load(&mem, reg[p] + j));
                 j += 1;
             }
             break;
-        } else if slice(instruction, 7, 9) == 0b001100000 { // jmp
-            let c : usize = slice(instruction, 3, 3) as usize;
+        } else if slice(instruction, 10, 22) == 0b0011000000000000000000 { // jmp
+            let c : usize = slice(instruction, 5, 5) as usize;
             if reg[c] != 0 {
-                let t : usize = slice(instruction, 0, 3) as usize;
-                let h : u16 = slice(instruction, 6, 1);
+                let t : usize = slice(instruction, 0, 5) as usize;
                 pc = reg[t];
-                alignment = if h == 1 {true} else {false};
-                continue;
+                continue; // avoid incrementing pc as normal
             }
-        } else if slice(instruction, 6, 10) == 0b0100000000 { // ld
-            let p : usize = slice(instruction, 3, 3) as usize;
-            let t : usize = slice(instruction, 0, 3) as usize;
+        } else if slice(instruction, 10, 22) == 0b0100000000000000000000 { // ld
+            let p : usize = slice(instruction, 5, 5) as usize;
+            let t : usize = slice(instruction, 0, 5) as usize;
             reg[t] = load(&mem, reg[p]);
-        } else if slice(instruction, 6, 10) == 0b0101000000 { // st
-            let p : usize = slice(instruction, 3, 3) as usize;
-            let t : usize = slice(instruction, 0, 3) as usize;
+        } else if slice(instruction, 10, 22) == 0b0101000000000000000000 { // st
+            let p : usize = slice(instruction, 5, 5) as usize;
+            let t : usize = slice(instruction, 0, 5) as usize;
             store(&mut mem, reg[p], reg[t]);
-        } else if slice(instruction, 13, 3) == 0b011 { // mov
-            let w : u8 = slice(instruction, 11, 2) as u8;
-            let i : u32 = slice(instruction, 3, 8) as u32;
-            let t : usize = slice(instruction, 0, 3) as usize;
+        } else if slice(instruction, 22, 10) == 0b0110000000 { // mov
+            let w : u8 = slice(instruction, 21, 1) as u8;
+            let i : u32 = slice(instruction, 0, 16) as u32;
+            let t : usize = slice(instruction, 16, 5) as usize;
+            // TODO refactor below as simple ternary
             let mask : u32 = !((1 << (8 * (w + 1))) - (1 << (8 * w)));
             reg[t] = (reg[t] & mask) | (i << (8 * w));
-        } else if slice(instruction, 9, 7) == 0b1000000 { // sub
-            let a : usize = slice(instruction, 6, 3) as usize;
-            let b : usize = slice(instruction, 3, 3) as usize;
-            let t : usize = slice(instruction, 0, 3) as usize;
+        } else if slice(instruction, 21, 11) == 0b10000000000 { // sub
+            let a : usize = slice(instruction, 5, 5) as usize;
+            let b : usize = slice(instruction, 0, 5) as usize;
+            let t : usize = slice(instruction, 16, 5) as usize;
             reg[t] = reg[a].wrapping_sub(reg[b]);
         } else {
-            println!("illegal instruction"); // TODO more debug information
+            println!("illegal instruction {:032b}", instruction); // TODO more debug information
             break;
             // TODO return error
         }
-        if alignment {
-            pc += 1;
-        } 
-        alignment = !alignment;
+        pc += 1;
     }
     Ok(())
 }
