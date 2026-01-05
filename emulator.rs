@@ -50,7 +50,7 @@ fn main() -> Result<(), Error> {
             let mut j : u32 = 0;
             let p : usize = slice(instruction, 5, 5) as usize;
             let l : usize = slice(instruction, 0, 5) as usize;
-            println!("{}", if reg[l] == 0 {"Emulation complete, printing results:"} else {"No results to print."});
+            println!("{}", if reg[l] == 0 {"No results to print."} else {"Emulation complete, printing results:"});
             while j < reg[l] {
                 println!("{}", load(&mem, reg[p] + j));
                 j += 1;

@@ -80,6 +80,10 @@ encode text = let parts = splitWhen isSpace text in
                     getNumber a 5 ++
                     getNumber b 5
                 _ -> error $ "improperly formatted arguments to " ++ operation
+            "data" -> case operands of
+                ['$':i] -> pack $ -- TODO allow other formats
+                    getNumber i 32
+                _ -> error $ "improperly formatted arguments to " ++ operation
             _ -> error $ "unknown assembly instruction type " ++ operation
 
 assemble :: String -> [Word8]
