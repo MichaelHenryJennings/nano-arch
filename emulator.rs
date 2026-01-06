@@ -41,7 +41,7 @@ fn main() -> Result<(), Error> {
         mem[k] = image[k];
         k += 1;
     }
-    println!("Beginning emulation.");
+    // println!("Beginning emulation.");
 
     // fetch-decode-execute loop
     loop {
@@ -50,7 +50,7 @@ fn main() -> Result<(), Error> {
             let mut j : u32 = 0;
             let p : usize = slice(instruction, 5, 5) as usize;
             let l : usize = slice(instruction, 0, 5) as usize;
-            println!("{}", if reg[l] == 0 {"No results to print."} else {"Emulation complete, printing results:"});
+            // println!("{}", if reg[l] == 0 {"No results to print."} else {"Emulation complete, printing results:"});
             while j < reg[l] {
                 println!("{}", load(&mem, reg[p] + j));
                 j += 1;

@@ -5,4 +5,4 @@ clean-hs:
 clean: clean-hs
 
 commit:
-	git add . && git commit -m "$(m)" && git push
+	./test.bash && git add . && git commit -m "$(m)" && git push
