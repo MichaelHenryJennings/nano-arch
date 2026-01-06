@@ -34,57 +34,99 @@ pack bits = if length bits /= 32
 encode :: String -> [Word8] -- assembles a single instruction
 encode text = let parts = takeWhile (/= ";") (splitWhen isSpace text) in
     case parts of
-        [] -> error "blank line of assembly"
-        (operation : operands) -> case operation of
-            "halt" -> case operands of
-                ['r':p, 'r':l] -> pack $
-                    replicate 22 O ++
-                    getNumber p 5 ++
-                    getNumber l 5
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            "jmp" -> case operands of
-                ['r':c, 'r':t] -> pack $
-                    [O, O, I, I] ++
-                    replicate 18 O ++
-                    getNumber c 5 ++
-                    getNumber t 5
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            "ld" -> case operands of
-                ['r':p, 'r':t] -> pack $
-                    [O, I, O, O] ++
-                    replicate 18 O ++
-                    getNumber p 5 ++
-                    getNumber t 5
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            "st" -> case operands of
-                ['r':p, 'r':t] -> pack $
-                    [O, I, O, I] ++
-                    replicate 18 O ++
-                    getNumber p 5 ++
-                    getNumber t 5
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            "mov" -> case operands of
-                ['@':w, '$':i, 'r':t] -> pack $
-                    [O, I, I] ++
-                    replicate 7 O ++
-                    getNumber w 1 ++
-                    getNumber t 5 ++
-                    getNumber i 16
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            "sub" -> case operands of
-                ['r':a, 'r':b, 'r':t] -> pack $
-                    [I] ++
-                    replicate 10 O ++
-                    getNumber t 5 ++
-                    replicate 6 O ++
-                    getNumber a 5 ++
-                    getNumber b 5
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            "data" -> case operands of
-                ['$':i] -> pack $ -- TODO allow other formats
-                    getNumber i 32
-                _ -> error $ "improperly formatted arguments to " ++ operation
-            _ -> error $ "unknown assembly instruction type " ++ operation
+        ["halt", '@':'r':p, '#':'r':l] -> pack $ 
+            replicate 22 O ++ 
+            getNumber p 5 ++ 
+            getNumber l 5
+        ["jump", '?':'r':c, "->", 'r':t] -> pack $
+            [O, O, I, I] ++
+            replicate 18 O ++
+            getNumber c 5 ++
+            getNumber t 5
+        ['r':m, "<=", '@':'r':p] -> pack $
+            [O, I, O, O] ++
+            replicate 18 O ++
+            getNumber p 5 ++
+            getNumber m 5
+        ['@':'r':p, "<=", 'r':v] -> pack $
+            [O, I, O, I] ++
+            replicate 18 O ++
+            getNumber p 5 ++
+            getNumber v 5
+        ["lower", 'r':m, "<-", '$':i] -> pack $
+            [O, I, I] ++
+            replicate 7 O ++
+            [O] ++
+            getNumber m 5 ++
+            getNumber i 16
+        ["upper", 'r':m, "<-", '$':i] -> pack $
+            [O, I, I] ++
+            replicate 7 O ++
+            [I] ++
+            getNumber m 5 ++
+            getNumber i 16
+        -- TODO move macro-op
+        ['r':m, "<=", 'r':a, "-", 'r':b] -> pack $
+            [I] ++
+            replicate 10 O ++
+            getNumber m 5 ++
+            replicate 6 O ++
+            getNumber a 5 ++
+            getNumber b 5
+        ['$':i] -> pack $ -- TODO allow other formats
+            getNumber i 32
+        _ -> error $ "unknown instruction: " ++ text
+        -- [] -> error "blank line of assembly"
+        -- (operation : operands) -> case operation of
+        --     "halt" -> case operands of
+        --         ['r':p, 'r':l] -> pack $
+        --             replicate 22 O ++
+        --             getNumber p 5 ++
+        --             getNumber l 5
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     "jmp" -> case operands of
+        --         ['r':c, 'r':t] -> pack $
+        --             [O, O, I, I] ++
+        --             replicate 18 O ++
+        --             getNumber c 5 ++
+        --             getNumber t 5
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     "ld" -> case operands of
+        --         ['r':p, 'r':t] -> pack $
+        --             [O, I, O, O] ++
+        --             replicate 18 O ++
+        --             getNumber p 5 ++
+        --             getNumber t 5
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     "st" -> case operands of
+        --         ['r':p, 'r':t] -> pack $
+        --             [O, I, O, I] ++
+        --             replicate 18 O ++
+        --             getNumber p 5 ++
+        --             getNumber t 5
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     "mov" -> case operands of
+        --         ['@':w, '$':i, 'r':t] -> pack $
+        --             [O, I, I] ++
+        --             replicate 7 O ++
+        --             getNumber w 1 ++
+        --             getNumber t 5 ++
+        --             getNumber i 16
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     "sub" -> case operands of
+        --         ['r':a, 'r':b, 'r':t] -> pack $
+        --             [I] ++
+        --             replicate 10 O ++
+        --             getNumber t 5 ++
+        --             replicate 6 O ++
+        --             getNumber a 5 ++
+        --             getNumber b 5
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     "data" -> case operands of
+        --         ['$':i] -> pack $ -- TODO allow other formats
+        --             getNumber i 32
+        --         _ -> error $ "improperly formatted arguments to " ++ operation
+        --     _ -> error $ "unknown assembly instruction type " ++ operation
 
 assemble :: String -> [Word8]
 assemble [] = []

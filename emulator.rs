@@ -62,29 +62,29 @@ fn main() -> Result<(), Error> {
                 j += 1;
             }
             break;
-        } else if slice(instruction, 10, 22) == 0b0011000000000000000000 { // jmp
+        } else if slice(instruction, 10, 22) == 0b0011000000000000000000 { // jump
             let c : usize = slice(instruction, 5, 5) as usize;
             if reg[c] != 0 {
                 let t : usize = slice(instruction, 0, 5) as usize;
                 pc = reg[t] as usize;
                 continue; // avoid incrementing pc as normal
             }
-        } else if slice(instruction, 10, 22) == 0b0100000000000000000000 { // ld
+        } else if slice(instruction, 10, 22) == 0b0100000000000000000000 { // load
             let p : usize = slice(instruction, 5, 5) as usize;
             let t : usize = slice(instruction, 0, 5) as usize;
             reg[t] = mem[reg[p] as usize];
-        } else if slice(instruction, 10, 22) == 0b0101000000000000000000 { // st
+        } else if slice(instruction, 10, 22) == 0b0101000000000000000000 { // store
             let p : usize = slice(instruction, 5, 5) as usize;
             let t : usize = slice(instruction, 0, 5) as usize;
             mem[reg[p] as usize] = reg[t];
-        } else if slice(instruction, 22, 10) == 0b0110000000 { // mov
+        } else if slice(instruction, 22, 10) == 0b0110000000 { // move
             let w : u8 = slice(instruction, 21, 1) as u8;
             let i : u32 = slice(instruction, 0, 16) as u32;
             let t : usize = slice(instruction, 16, 5) as usize;
             // TODO refactor below as simple ternary
             let mask : u32 = !((1 << (8 * (w + 1))) - (1 << (8 * w)));
             reg[t] = (reg[t] & mask) | (i << (8 * w));
-        } else if slice(instruction, 21, 11) == 0b10000000000 { // sub
+        } else if slice(instruction, 21, 11) == 0b10000000000 { // subtract
             let a : usize = slice(instruction, 5, 5) as usize;
             let b : usize = slice(instruction, 0, 5) as usize;
             let t : usize = slice(instruction, 16, 5) as usize;
