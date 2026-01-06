@@ -4,7 +4,7 @@ import System.Environment(getArgs)
 import Data.List.Split(splitWhen)
 import qualified Data.ByteString.Lazy as ByteString
 
-data Bit = O | I deriving (Eq, Show)
+data Bit = O | I deriving (Eq, Show) -- for readability over Bool
 
 integerToBits :: Integer -> Int -> [Bit]
 integerToBits 0 0 = []
@@ -32,12 +32,12 @@ pack bits = if length bits /= 32
 
 -- TODO replace this with a declarative rules-based engine
 encode :: String -> [Word8] -- assembles a single instruction
-encode text = let parts = splitWhen isSpace text in
+encode text = let parts = takeWhile (/= ";") (splitWhen isSpace text) in
     case parts of
         [] -> error "blank line of assembly"
         (operation : operands) -> case operation of
             "halt" -> case operands of
-                ['r':p, 'r':l] -> pack $ 
+                ['r':p, 'r':l] -> pack $
                     replicate 22 O ++
                     getNumber p 5 ++
                     getNumber l 5
@@ -94,9 +94,9 @@ assemble text = let (line, rest) = break (== '\n') text in
         _ -> error "missing newline at end of assembly file"
 
 main :: IO ()
-main = do 
+main = do
     args <- getArgs
-    case args of 
+    case args of
         [assembly, machine] -> do
             text <- readFile (assembly ++ ".nasm")
             ByteString.writeFile (machine ++ ".nano") (ByteString.pack $ assemble text)

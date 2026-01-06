@@ -1,21 +1,19 @@
-mov @0 $0 r0
-mov @0 $1 r1
-sub r0 r1 r31
-mov @0 $18 r2
-mov @0 $28 r3
-mov @0 $0 r4
-mov @0 $1000 r5
-mov @0 $0 r6
-mov @0 $9 r7
-ld r2 r8
-sub r0 r8 r8
-sub r4 r8 r4
-sub r6 r31 r6
-sub r2 r31 r2
-sub r3 r2 r9
-jmp r9 r7
-st r5 r4
-halt r5 r1
+mov @0 $0 r0 ; constant 0
+mov @0 $1 r1 ; constant 1
+sub r0 r1 r31 ; constant -1
+mov @0 $16 r2 ; pointer to start of array
+mov @0 $26 r3 ; pointer to end of array
+mov @0 $0 r4 ; sum accumulator
+mov @0 $1000 r5 ; output pointer
+mov @0 $8 r6 ; start of loop
+ld r2 r7 ; load from array
+sub r0 r7 r7 ; negate
+sub r4 r7 r4 ; accumulate
+sub r2 r31 r2 ; move pointer
+sub r3 r2 r8 ; test pointer
+jmp r8 r6 ; loop
+st r5 r4 ; write output
+halt r5 r1 ; done!
 data $1
 data $2
 data $3
